@@ -9,23 +9,26 @@ namespace Practica2_GeoProject.Controllers
     public class GeoController : Controller
     {
         private readonly HttpClient _httpClient;
+        private readonly IConfiguration _configuration;
 
         public GeoController(IConfiguration configuration)
         {
+            _configuration = configuration;
             _httpClient = new HttpClient();
             // User-Agent obligatorio para OSM
-            var userAgent = "PracticaEstudiante_Mexico_ITSON/1.0 (tu_correo@ejemplo.com)";
+            var userAgent = _configuration["OSM_USER_AGENT"];
             _httpClient.DefaultRequestHeaders.Add("User-Agent", userAgent);
         }
 
         public async Task<IActionResult> Index(string address = "", string buscarTipo = "", double latActual = 0, double lonActual = 0)
         {
             var modelo = new UbicationModel();
+            modelo.TileLayerUrl = _configuration["OSM_TILE_LAYER"];
 
             if (!string.IsNullOrEmpty(address))
             {
                 string busqueda = Uri.EscapeDataString(address);
-                string urlSearch = $"https://nominatim.openstreetmap.org/search?q={busqueda}&format=json&limit=1";
+                string urlSearch = string.Format(_configuration["NOMINATIM_URL"], busqueda);
 
                 try
                 {
@@ -40,7 +43,7 @@ namespace Practica2_GeoProject.Controllers
                             var sitio = resultados[0];
                             modelo.Address = sitio.DisplayName;
                             modelo.Found = true;
-                            // Convertir string a double con seguridad
+                            // Convertir string to double
                             if (double.TryParse(sitio.Lat, NumberStyles.Any, CultureInfo.InvariantCulture, out double lat) &&
                                 double.TryParse(sitio.Lon, NumberStyles.Any, CultureInfo.InvariantCulture, out double lon))
                             {
@@ -74,7 +77,7 @@ namespace Practica2_GeoProject.Controllers
                         out center;
                     ";
 
-                    string urlOsm = "https://overpass-api.de/api/interpreter?data=" + Uri.EscapeDataString(query);
+                    string urlOsm = _configuration["OVERPASS_URL"] + Uri.EscapeDataString(query);
 
                     try
                     {
@@ -89,10 +92,6 @@ namespace Practica2_GeoProject.Controllers
                                 {
                                     double itemLat = 0;
                                     double itemLon = 0;
-
-                                    // Lógica inteligente:
-                                    // Si es un PUNTO, tiene 'lat' y 'lon' directos.
-                                    // Si es un EDIFICIO, tiene un objeto 'center' con 'lat' y 'lon'.
                                     if (element.TryGetProperty("lat", out var l))
                                     {
                                         itemLat = l.GetDouble();
@@ -104,7 +103,6 @@ namespace Practica2_GeoProject.Controllers
                                         itemLon = c.GetProperty("lon").GetDouble();
                                     }
 
-                                    // Solo agregamos si logramos obtener coordenadas válidas
                                     if (itemLat != 0 && itemLon != 0)
                                     {
                                         modelo.FindedPlaces.Add(new NearPlace
@@ -119,10 +117,9 @@ namespace Practica2_GeoProject.Controllers
                             }
                         }
                     }
-                    catch { /* Ignorar errores de OSM */ }
+                    catch {}
                 }
             }
-
             return View(modelo);
         }
     }

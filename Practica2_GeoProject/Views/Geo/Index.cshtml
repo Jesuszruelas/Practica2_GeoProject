@@ -5,16 +5,13 @@
 
 <div class="container mt-4">
     <div class="text-center">
-        <h1 class="display-3 text-white fw-bold" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.6);">
-            Buscador Geográfico
-        </h1>
-        
+        <h1 class="display-3 text-white fw-bold" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.6);">Buscador (OSM)</h1>
         <form asp-action="Index" method="get" class="d-flex justify-content-center mt-3 mb-4">
             <input type="text" name="address" 
-                   placeholder="Ej: UTS Sonora, Obregon" 
+                   placeholder="Ejemplo: Ciudad Obregón" 
                    class="form-control w-50 me-2 shadow-sm" 
                    value="@(Model?.Address != "Ubicación Seleccionada" ? Model?.Address : "")"/>
-            <button type="submit" class="btn btn-primary shadow-sm">🔍 Buscar</button>
+            <button type="submit" class="btn btn-primary shadow-sm"> Buscar</button>
         </form>
     </div>
 
@@ -67,31 +64,29 @@
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
         <script>
-            // --- PASO 1: OBTENER COORDENADAS DESDE C# ---
+            // ---OBTENER COORDENADAS DESDE---
             // Usamos CultureInfo.InvariantCulture para asegurar formato "27.48" (con punto) y no "27,48" (con coma)
             var lat = @Model.Lat.ToString(CultureInfo.InvariantCulture);
             var lon = @Model.Lon.ToString(CultureInfo.InvariantCulture);
             var nombreUbicacion = "@Html.Raw(Model.Address)";
 
-            // --- PASO 2: INICIALIZAR EL MAPA ---
             var map = L.map('map').setView([lat, lon], 15); // Zoom 15
 
-            // Cargar capa visual (OpenStreetMap)
-            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            //Cargar capa visual (OpenStreetMap)
+            L.tileLayer('@Html.Raw(Model.TileLayerUrl)', {
                 maxZoom: 19,
                 attribution: '© OpenStreetMap'
             }).addTo(map);
 
-            // --- PASO 3: MARCADOR AZUL (TU UBICACIÓN) ---
+            //--- (TU UBICACIÓN) ---
             L.marker([lat, lon]).addTo(map)
                 .bindPopup("<b>📍 Estás aquí:</b><br>" + nombreUbicacion)
                 .openPopup();
 
-            // --- PASO 4: MARCADORES ROJOS (TIENDAS ENCONTRADAS) ---
-            // Este bucle recorre la lista que llenamos en el Controlador
+            //---MARCADORES ROJOS (TIENDAS ENCONTRADAS)---
+            // Este bucle recorre la listaen el Controlador
             @foreach (var lugar in Model.FindedPlaces)
             {
-              
                 if (lugar.Lat != 0 && lugar.Lon != 0)
                 {
                     <text>

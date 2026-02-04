@@ -4,13 +4,14 @@ namespace Practica2_GeoProject.Models
 {
     public class UbicationModel
     {
-        // Propiedades de dirección
-        public string Address { get; set; } // Nombre del lugar (Ej: UTS Sonora)
+        public string Address { get; set; }
         public bool Found { get; set; } = false;
         public double Lat { get; set; }
         public double Lon { get; set; }
 
         public List<NearPlace> FindedPlaces { get; set; } = new List<NearPlace>();
+
+        public string TileLayerUrl { get; set; }
     }
 
     public class NearPlace
@@ -34,7 +35,6 @@ namespace Practica2_GeoProject.Models
         public string DisplayName { get; set; }
     }
 
-    // 4. Clases para Overpass (Búsqueda de tiendas)
     public class OsmResponse
     {
         [JsonPropertyName("elements")]
